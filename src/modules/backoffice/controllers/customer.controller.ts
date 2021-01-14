@@ -13,9 +13,12 @@ import {
 import { ValidadtorInterceptor } from 'src/interceptors/validator.interceptor';
 import { CreateAddressContract } from '../contracts/customer/create-address.contract';
 import { CreateCustomerContract } from '../contracts/customer/create-customer.contract';
-import { CreateCustomerDto } from '../dtos/create.customer-dto';
+import { CreatePetContract } from '../contracts/customer/create-pet.contract';
+import { CreateCustomerDto } from '../dtos/create.customer.dto';
+import { QueryDto } from '../dtos/query.dto';
 import { Address } from '../models/address.model';
 import { Customer } from '../models/customer.model';
+import { Pet } from '../models/pet.model';
 import { Result } from '../models/result.model';
 import { User } from '../models/user.model';
 import { AccountService } from '../services/account.service';
@@ -29,13 +32,21 @@ export class CustomerController {
   ) {}
 
   @Get()
-  get(): Result {
-    return new Result(null, true, [], null);
+  async get(): Promise<Result> {
+    const customers = await this.customerService.findAll();
+    return new Result(null, true, customers, null);
   }
 
   @Get(':document')
-  getById(@Param('document') document: string): Result {
-    return new Result(null, true, {}, null);
+  async getById(@Param('document') document: string): Promise<Result> {
+    const customer = await this.customerService.findByDocument(document);
+    return new Result(null, true, customer, null);
+  }
+
+  @Post('query')
+  async query(@Body() model: QueryDto): Promise<Result> {
+    const customers = await this.customerService.query(model);
+    return new Result(null, true, customers, null);
   }
 
   @Post()
@@ -51,7 +62,7 @@ export class CustomerController {
           model.name,
           model.document,
           model.email,
-          null,
+          [],
           null,
           null,
           null,
@@ -103,6 +114,67 @@ export class CustomerController {
           null,
           error,
         ),
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  @Post(':document/addresses/shipping')
+  @UseInterceptors(new ValidadtorInterceptor(new CreateAddressContract()))
+  async addBillingShipping(
+    @Param('document') document: string,
+    @Body() model: Address,
+  ) {
+    try {
+      const customer = await this.customerService.addBillingShipping(
+        document,
+        model,
+      );
+      return new Result('Endereço alterado com sucesso!', true, customer, null);
+    } catch (error) {
+      throw new HttpException(
+        new Result(
+          'Não foi possível adicionar seu endereço',
+          false,
+          null,
+          error,
+        ),
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  @Post(':document/pets')
+  @UseInterceptors(new ValidadtorInterceptor(new CreatePetContract()))
+  async addPet(@Param('document') document: string, @Body() model: Pet) {
+    try {
+      const customer = await this.customerService.createPet(document, model);
+      return new Result('Endereço alterado com sucesso!', true, customer, null);
+    } catch (error) {
+      throw new HttpException(
+        new Result('Não foi possível adicionar seu pet', false, null, error),
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  @Put(':document/pets/:petId')
+  @UseInterceptors(new ValidadtorInterceptor(new CreatePetContract()))
+  async updatePet(
+    @Param('document') document: string,
+    @Param('petId') petId: string,
+    @Body() model: Pet,
+  ) {
+    try {
+      const customer = await this.customerService.updatePet(
+        document,
+        petId,
+        model,
+      );
+      return new Result('Endereço alterado com sucesso!', true, customer, null);
+    } catch (error) {
+      throw new HttpException(
+        new Result('Não foi possível adicionar seu pet', false, null, error),
         HttpStatus.BAD_REQUEST,
       );
     }
