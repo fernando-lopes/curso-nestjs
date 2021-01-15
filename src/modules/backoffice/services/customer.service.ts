@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { QueryDto } from '../dtos/query.dto';
-import { Address } from '../models/address.model';
+import { UpdateCustomerDto } from '../dtos/customer/update.customer.dto';
 import { ICustomer } from '../models/customer.interface';
 import { Customer } from '../models/customer.model';
-import { Pet } from '../models/pet.model';
+import { CreditCard } from '../models/credit-card.model';
 
 @Injectable()
 export class CustomerService {
@@ -18,56 +18,8 @@ export class CustomerService {
     return await user.save();
   }
 
-  async addBillingAddress(document: string, data: Address): Promise<Customer> {
-    const options = { upsert: true };
-    return await this.Model.findOneAndUpdate(
-      { document },
-      {
-        $set: {
-          billingAddress: data,
-        },
-      },
-      options,
-    );
-  }
-
-  async addBillingShipping(document: string, data: Address): Promise<Customer> {
-    const options = { upsert: true };
-    return await this.Model.findOneAndUpdate(
-      { document },
-      {
-        $set: {
-          shippingAddress: data,
-        },
-      },
-      options,
-    );
-  }
-
-  async createPet(document, data: Pet): Promise<Customer> {
-    const options = { upsert: true, new: true };
-    return await this.Model.findOneAndUpdate(
-      { document },
-      {
-        $push: {
-          pets: data,
-        },
-      },
-      options,
-    );
-  }
-
-  async updatePet(document, petId: string, data: Pet): Promise<Customer> {
-    const options = { upsert: true, new: true };
-    return await this.Model.findOneAndUpdate(
-      { document, 'pets._id': petId },
-      {
-        $set: {
-          'pets.$': data,
-        },
-      },
-      options,
-    );
+  async update(document: string, data: UpdateCustomerDto): Promise<Customer> {
+    return await this.Model.findOneAndUpdate({ document }, data);
   }
 
   async findAll(): Promise<Customer[]> {
@@ -88,5 +40,17 @@ export class CustomerService {
     })
       .sort(model.sort)
       .exec();
+  }
+
+  async saveOrUpdateCreditCard(
+    document: string,
+    data: CreditCard,
+  ): Promise<Customer> {
+    const options = { upsert: true };
+    return await this.Model.findOneAndUpdate(
+      { document },
+      { $set: { card: data } },
+      options,
+    );
   }
 }
