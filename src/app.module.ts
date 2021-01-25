@@ -16,7 +16,7 @@ import { StoreModule } from './modules/store/store.module';
       password: 'curso.123',
       database: 'petshop',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: false,
+      synchronize: true,
     }),
     BackofficeModule,
     StoreModule,
