@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpException,
   HttpStatus,
   Param,
@@ -20,26 +21,14 @@ export class AddressController {
 
   @Post(':document/billing')
   @UseInterceptors(new ValidadtorInterceptor(new CreateAddressContract()))
-  async addBillingAddress(
-    @Param('document') document: string,
-    @Body() model: Address,
-  ) {
+  async addBillingAddress(@Param('document') document: string, @Body() model: Address) {
     try {
-      const customer = await this.service.create(
-        document,
-        model,
-        AddressType.Billing,
-      );
+      const customer = await this.service.create(document, model, AddressType.Billing);
 
       return new Result('Endereço alterado com sucesso!', true, customer, null);
     } catch (error) {
       throw new HttpException(
-        new Result(
-          'Não foi possível adicionar seu endereço',
-          false,
-          null,
-          error,
-        ),
+        new Result('Não foi possível adicionar seu endereço', false, null, error),
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -47,25 +36,26 @@ export class AddressController {
 
   @Post(':document/shipping')
   @UseInterceptors(new ValidadtorInterceptor(new CreateAddressContract()))
-  async addBillingShipping(
-    @Param('document') document: string,
-    @Body() model: Address,
-  ) {
+  async addBillingShipping(@Param('document') document: string, @Body() model: Address) {
     try {
-      const customer = await this.service.create(
-        document,
-        model,
-        AddressType.Shipping,
-      );
+      const customer = await this.service.create(document, model, AddressType.Shipping);
       return new Result('Endereço alterado com sucesso!', true, customer, null);
     } catch (error) {
       throw new HttpException(
-        new Result(
-          'Não foi possível adicionar seu endereço',
-          false,
-          null,
-          error,
-        ),
+        new Result('Não foi possível adicionar seu endereço', false, null, error),
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  @Get('search/:zipcode')
+  async search(@Param('zipcode') zipcode: string) {
+    try {
+      const response = await this.service.getAddressByZipCode(zipcode).toPromise();
+      return new Result(null, true, response.data, null);
+    } catch (error) {
+      throw new HttpException(
+        new Result('Não foi possível localizar seu endereço', false, null, error),
         HttpStatus.BAD_REQUEST,
       );
     }
