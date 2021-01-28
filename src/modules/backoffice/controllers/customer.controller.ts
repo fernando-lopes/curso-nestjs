@@ -21,6 +21,7 @@ import { QueryDto } from '../dtos/query.dto';
 import { CreditCard } from '../models/credit-card.model';
 import { Customer } from '../models/customer.model';
 import { Result } from '../models/result.model';
+import { IUser } from '../models/user.interface';
 import { User } from '../models/user.model';
 import { AccountService } from '../services/account.service';
 import { CustomerService } from '../services/customer.service';
@@ -55,32 +56,18 @@ export class CustomerController {
   @UseInterceptors(new ValidadtorInterceptor(new CreateCustomerContract()))
   async post(@Body() model: CreateCustomerDto): Promise<Result> {
     try {
-      const user = await this.accountService.create(
-        new User(model.document, model.password, true),
+      const user: IUser = await this.accountService.create(
+        new User(model.document, model.password, true, ['user']),
       );
 
       const customer = await this.customerService.create(
-        new Customer(
-          model.name,
-          model.document,
-          model.email,
-          [],
-          null,
-          null,
-          null,
-          user,
-        ),
+        new Customer(model.name, model.document, model.email, [], null, null, null, user),
       );
 
       return new Result('Cliente criado com sucesso!', true, customer, null);
     } catch (error) {
       throw new HttpException(
-        new Result(
-          'Não foi possível realizar seu cadastro',
-          false,
-          null,
-          error,
-        ),
+        new Result('Não foi possível realizar seu cadastro', false, null, error),
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -88,18 +75,10 @@ export class CustomerController {
 
   @Put(':document')
   @UseInterceptors(new ValidadtorInterceptor(new UpdateCustomerContract()))
-  async put(
-    @Param('document') document: string,
-    @Body() body: UpdateCustomerDto,
-  ): Promise<Result> {
+  async put(@Param('document') document: string, @Body() body: UpdateCustomerDto): Promise<Result> {
     try {
       const customer = await this.customerService.update(document, body);
-      return new Result(
-        'Cliente atualizado com sucesso!',
-        true,
-        customer,
-        null,
-      );
+      return new Result('Cliente atualizado com sucesso!', true, customer, null);
     } catch (error) {
       throw new HttpException(
         new Result('Não foi possível realizar seu update', false, null, error),
@@ -115,10 +94,7 @@ export class CustomerController {
 
   @Post(':document/credit-cards')
   @UseInterceptors(new ValidadtorInterceptor(new CreateCreaditCardContract()))
-  async createCreditCard(
-    @Param('document') document: string,
-    @Body() model: CreditCard,
-  ) {
+  async createCreditCard(@Param('document') document: string, @Body() model: CreditCard) {
     try {
       await this.customerService.saveOrUpdateCreditCard(document, model);
       return new Result('Cardão criado com sucesso!', true, model, null);
