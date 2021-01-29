@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { GraphQLModule } from '@nestjs/graphql';
 import { BackofficeModule } from './modules/backoffice/backoffice.module';
 import { StoreModule } from './modules/store/store.module';
 import { ConfigModule } from '@nestjs/config';
 import { AgendaModule } from './modules/agenda/agenda.module';
+import { ReportsModule } from './modules/reports/reports.module';
 
 @Module({
   imports: [
@@ -20,9 +22,16 @@ import { AgendaModule } from './modules/agenda/agenda.module';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
+    GraphQLModule.forRoot({
+      // debug: false,
+      // playground: false,
+      installSubscriptionHandlers: true,
+      autoSchemaFile: 'schema.gql',
+    }),
     BackofficeModule,
     StoreModule,
     AgendaModule,
+    ReportsModule,
   ],
   controllers: [],
   providers: [],
